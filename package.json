@@ -1,0 +1,14 @@
+{
+  "name": "tree-whale-telegram-bot",
+  "version": "1.0.0",
+  "description": "Telegram gatekeeper bot for TREE whale chat eligibility.",
+  "type": "module",
+  "main": "src/bot.js",
+  "scripts": {
+    "start": "node src/bot.js",
+    "check": "node --check src/bot.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
