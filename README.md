@@ -13,7 +13,7 @@ It checks the NFTree collection type:
 - Lets a user register with `/verify <sui wallet address>`.
 - Reads live wallet-owned NFTree objects from Sui RPC.
 - Stores the Telegram user id, wallet address, NFTree count, and NFTree object ids locally.
-- Serves a Telegram Mini App verification screen.
+- Runs as a command-based Telegram verifier.
 - Handles Telegram join requests when the group uses approval-based joining.
 - Removes tracked members from the whale chat if they no longer own an NFTree.
 - Lets admins run `/audit` to force an immediate ownership check.
@@ -66,34 +66,38 @@ npm start
 
 No package install is required.
 
-The bot also starts a local Mini App server on:
+The bot also starts a small HTTP health server on:
 
 ```text
-http://127.0.0.1:8787/app
+http://127.0.0.1:8787/
 ```
 
-Telegram Mini Apps require a public HTTPS URL, so local-only `http://127.0.0.1` is useful for development but cannot be used as the final BotFather Web App URL.
+Render web services expect the bot to listen on a web port. This health server keeps Render happy while verification happens in Telegram with `/verify`.
 
-## Telegram Mini App Setup
+## Command-Only Setup
 
-1. Host this bot on a machine or service with a public HTTPS URL.
-2. Point that HTTPS URL to the bot's `WEBAPP_PORT`, default `8787`.
-3. Set this in `.env`:
+Use this mode when you want people to verify directly in Telegram instead of opening a Mini App.
+
+1. Open **@BotFather**.
+2. Send `/mybots`.
+3. Select `Tree Gatekeeper`.
+4. Choose **Bot Settings**.
+5. Choose **Menu Button**.
+6. Send:
 
 ```text
-WEBAPP_URL=https://your-domain.com/app
-WHALE_CHAT_INVITE_URL=https://t.me/+yourApprovalInviteLink
+/empty
 ```
 
-4. Restart the bot.
-5. Open **@BotFather**.
-6. Send `/mybots`.
-7. Select your bot.
-8. Choose **Bot Settings**.
-9. Choose **Menu Button**.
-10. Set the menu button URL to the same `WEBAPP_URL`.
+7. In Render, leave `ENABLE_WEBAPP` as `false` or unset.
+8. Remove `WEBAPP_URL` from Render if it is currently set.
+9. Redeploy the service.
 
-After that, users can tap the bot's menu button or the **Verify NFTree** button from `/start`.
+Users can verify in any chat where the bot is present:
+
+```text
+/verify@TreeGatekeeperBot 0x...
+```
 
 ## User Commands
 
@@ -122,9 +126,8 @@ NFTREE_PACKAGE_ID=0xf6c6d439ea0da2f3e9ba79e4992a7a4c113215fbf54c442ac9020c315f95
 NFTREE_MODULE_NAME=collection
 NFTREE_STRUCT_TYPE=0xf6c6d439ea0da2f3e9ba79e4992a7a4c113215fbf54c442ac9020c315f953705::collection::NFT
 NFTREE_NAME_PATTERN=nftree
-WEBAPP_URL=https://your-render-url.onrender.com/app
+ENABLE_WEBAPP=false
 WEBAPP_PORT=8787
-WHALE_CHAT_INVITE_URL=https://t.me/+yourApprovalInviteLink
 TELEGRAM_POLL_SECONDS=25
 AUDIT_INTERVAL_MINUTES=30
 MEMBER_STORE_PATH=data/members.json
