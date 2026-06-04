@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NFTree Whale Verification</title>
+    <link rel="stylesheet" href="/app.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="brand">
+        <div class="mark">NFTree</div>
+        <div>
+          <h1>Whale Chat Verification</h1>
+          <p>Confirm that your Sui wallet owns an NFTree before requesting access.</p>
+        </div>
+      </section>
+
+      <form class="verify" id="verifyForm">
+        <label for="wallet">Sui wallet address</label>
+        <div class="inputRow">
+          <input id="wallet" name="wallet" spellcheck="false" autocomplete="off" placeholder="0x..." required>
+          <button type="submit" id="verifyButton">Verify</button>
+        </div>
+      </form>
+
+      <section class="requirement" aria-label="Requirement">
+        <span>Requirement</span>
+        <strong>1 NFTree</strong>
+      </section>
+
+      <section class="result hidden" id="result" aria-live="polite">
+        <div class="status" id="statusText"></div>
+        <dl class="breakdown">
+          <div>
+            <dt>NFTree count</dt>
+            <dd id="nftreeCount">-</dd>
+          </div>
+          <div>
+            <dt>Collection type</dt>
+            <dd id="collectionType">NFTree</dd>
+          </div>
+        </dl>
+        <p class="warning hidden" id="warningText"></p>
+        <a class="join hidden" id="joinLink" target="_blank" rel="noreferrer">Request Whale Chat Access</a>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
