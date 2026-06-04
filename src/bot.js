@@ -16,7 +16,8 @@ const config = {
   nftreeModuleName: env("NFTREE_MODULE_NAME", "collection").toLowerCase(),
   nftreeStructType: env("NFTREE_STRUCT_TYPE", "0xf6c6d439ea0da2f3e9ba79e4992a7a4c113215fbf54c442ac9020c315f953705::collection::NFT").toLowerCase(),
   nftreeNamePattern: env("NFTREE_NAME_PATTERN", "nftree"),
-  webAppUrl: env("WEBAPP_URL", ""),
+  enableWebApp: env("ENABLE_WEBAPP", "false").toLowerCase() === "true",
+  webAppUrl: env("ENABLE_WEBAPP", "false").toLowerCase() === "true" ? env("WEBAPP_URL", "") : "",
   webAppPort: Number(env("PORT", env("WEBAPP_PORT", "8787"))),
   whaleChatInviteUrl: env("WHALE_CHAT_INVITE_URL", ""),
   telegramPollMs: Math.max(5, Number(env("TELEGRAM_POLL_SECONDS", "25"))) * 1000,
@@ -40,7 +41,7 @@ async function main() {
   console.log(`Group chat: ${config.telegramGroupChatId}`);
 
   await pollTelegramOnce();
-  startWebAppServer();
+  startHttpServer();
   setInterval(() => pollTelegramOnce().catch((error) => console.error("Telegram poll failed:", error)), config.telegramPollMs);
   setInterval(() => auditMembers("scheduled").catch((error) => console.error("Audit failed:", error)), config.auditIntervalMs);
 }
@@ -336,7 +337,7 @@ async function suiRpc(method, params) {
   return json;
 }
 
-function startWebAppServer() {
+function startHttpServer() {
   const publicDir = path.join(rootDir, "public");
   const server = http.createServer((request, response) => {
     handleWebRequest(request, response, publicDir).catch((error) => {
@@ -346,8 +347,8 @@ function startWebAppServer() {
   });
 
   server.listen(config.webAppPort, () => {
-    console.log(`Mini App server listening on http://127.0.0.1:${config.webAppPort}`);
-    if (!config.webAppUrl) {
+    console.log(`HTTP server listening on http://127.0.0.1:${config.webAppPort}`);
+    if (config.enableWebApp && !config.webAppUrl) {
       console.log("Set WEBAPP_URL to an HTTPS /app URL before using the Telegram Web App button.");
     }
   });
@@ -363,6 +364,11 @@ async function handleWebRequest(request, response, publicDir) {
   }
 
   if (request.method === "POST" && url.pathname === "/api/verify") {
+    if (!config.enableWebApp) {
+      sendJson(response, 404, { ok: false, error: "Mini App verification is disabled. Use /verify in Telegram." });
+      return;
+    }
+
     const body = await readJsonBody(request);
     const telegramUser = validateTelegramWebAppInitData(body.initData);
     const wallet = normalizeSuiAddress(body.wallet);
@@ -391,6 +397,12 @@ async function handleWebRequest(request, response, publicDir) {
       warnings: [],
       inviteUrl: report.eligible ? config.whaleChatInviteUrl : ""
     });
+    return;
+  }
+
+  if (!config.enableWebApp && (url.pathname === "/" || url.pathname === "/app")) {
+    response.writeHead(200, { ...corsHeaders(), "content-type": "text/plain; charset=utf-8" });
+    response.end("Tree Gatekeeper is running. Use /verify in Telegram.");
     return;
   }
 
