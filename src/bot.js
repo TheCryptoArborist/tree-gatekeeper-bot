@@ -40,8 +40,8 @@ async function main() {
   console.log(`NFTree package: ${config.nftreePackageId}`);
   console.log(`Group chat: ${config.telegramGroupChatId}`);
 
-  await pollTelegramOnce();
   startHttpServer();
+  pollTelegramOnce().catch((error) => console.error("Telegram poll failed:", error));
   setInterval(() => pollTelegramOnce().catch((error) => console.error("Telegram poll failed:", error)), config.telegramPollMs);
   setInterval(() => auditMembers("scheduled").catch((error) => console.error("Audit failed:", error)), config.auditIntervalMs);
 }
