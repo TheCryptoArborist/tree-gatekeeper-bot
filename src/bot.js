@@ -507,16 +507,25 @@ function contentTypeFor(filePath) {
 }
 
 async function getNftreeOwnership(wallet) {
+  const exactTypeMatches = config.nftreeStructType
+    ? await getOwnedObjectsByFilter(wallet, { StructType: config.nftreeStructType })
+    : [];
+
+  if (exactTypeMatches.length > 0) return exactTypeMatches;
+
+  return getOwnedObjectsByFilter(wallet, { Package: config.nftreePackageId });
+}
+
+async function getOwnedObjectsByFilter(wallet, filter) {
   let cursor = null;
   const matches = [];
+  const seen = new Set();
 
   do {
     const json = await suiRpc("suix_getOwnedObjects", [
       wallet,
       {
-        filter: config.nftreeStructType
-          ? { StructType: config.nftreeStructType }
-          : { Package: config.nftreePackageId },
+        filter,
         options: {
           showType: true,
           showContent: true,
@@ -530,7 +539,8 @@ async function getNftreeOwnership(wallet) {
     const rows = json.result?.data ?? [];
     for (const row of rows) {
       const object = row.data;
-      if (object && isNftreeObject(object)) {
+      if (object && !seen.has(object.objectId) && isNftreeObject(object)) {
+        seen.add(object.objectId);
         matches.push({
           objectId: object.objectId,
           type: object.type,
@@ -547,7 +557,7 @@ async function getNftreeOwnership(wallet) {
 
 function isNftreeObject(object) {
   const type = String(object.type ?? "").toLowerCase();
-  if (config.nftreeStructType) return type === config.nftreeStructType;
+  if (config.nftreeStructType && type === config.nftreeStructType) return true;
 
   const expectedPrefix = `${config.nftreePackageId}::${config.nftreeModuleName}::`;
   if (!type.startsWith(expectedPrefix)) return false;
