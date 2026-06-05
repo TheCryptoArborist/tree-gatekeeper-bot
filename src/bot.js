@@ -115,7 +115,7 @@ async function handleVerify(message, args) {
   if (report.eligible) {
     await sendMessage(
       message.chat.id,
-      `Verified. ${formatUser(user)} owns ${report.nftreeCount} NFTree${report.nftreeCount === 1 ? "" : "s"}, which meets the whale chat requirement.`
+      `Verified. ${formatUser(user)} owns an NFTree. Eligible for campaign rewards.`
     );
   } else {
     await sendMessage(
